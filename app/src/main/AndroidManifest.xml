@@ -20,9 +20,13 @@
             </intent-filter>
         </activity>
 
-        <activity android:name=".GameOverActivity">
-
-        </activity>
+        <activity android:name=".GameOverActivity" />
+        <activity android:name=".GameWinnerActivity" />
     </application>
 
 </manifest>
+
+
+
+
+

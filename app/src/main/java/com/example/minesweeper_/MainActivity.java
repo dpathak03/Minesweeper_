@@ -6,6 +6,7 @@ import androidx.gridlayout.widget.GridLayout;
 import android.content.Intent;
 import android.content.res.Resources;
 import android.graphics.Color;
+import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.util.Log;
@@ -28,6 +29,8 @@ public class MainActivity extends AppCompatActivity {
     int isFirstClick = 0;
     private TextView timer;
     boolean isDigging = true;
+
+    boolean isWinner = false;
 
     private boolean[][] bombLocation;
 
@@ -162,6 +165,27 @@ public class MainActivity extends AppCompatActivity {
         }
         setMines();
     }
+    //check if there is a winner
+    private void checkWinner()
+    {
+        int greenCellCount = 0;
+
+        // Iterate through all cells
+        for (int i = 0; i < ROW_COUNT; i++) {
+            for (int j = 0; j < COLUMN_COUNT; j++) {
+                TextView tv = cell_tvs[i][j];
+
+                // Check if the background color is green
+                if (((ColorDrawable)tv.getBackground()).getColor() == Color.parseColor("lime")) {
+                    greenCellCount++;
+                }
+            }
+        }
+
+        if (greenCellCount == 4) {
+            isWinner = true;
+        }
+    }
 
     private void setMines() {
         Random rand = new Random();
@@ -188,51 +212,63 @@ public class MainActivity extends AppCompatActivity {
         }
         return new int[0];
     }
-    public void onClickTV(View view){
+    public void onClickTV(View view) {
         TextView tv = (TextView) view;
         int[] idx = findIndexOfCellTextView(tv);
         int i = idx[0];
         int j = idx[1];
+        isFirstClick += 1;
 
-        isFirstClick+=1;
-        if(isFirstClick == 1) {
-            //timer logic
-            new CountDownTimer(Long.MAX_VALUE, 1000) {
-                @Override
-                public void onTick(long millisUntilFinished) {
-                    time++;
-                    timer.setText(String.format(Locale.getDefault(), "%d", time));
-                }
-                @Override
-                public void onFinish() {
-                    //Not needed for this project, having it to implement abstract class
-                }
-            }.start();
+        if (isDigging) {
+            if (isFirstClick == 1) {
+                //timer logic
+                new CountDownTimer(Long.MAX_VALUE, 1000) {
+                    @Override
+                    public void onTick(long millisUntilFinished) {
+                        time++;
+                        timer.setText(String.format(Locale.getDefault(), "%d", time));
+                    }
 
-            //bfs dig
-            initialDig(i,j);
-        }
+                    @Override
+                    public void onFinish() {
+                        //Not needed for this project, having it to implement abstract class
+                    }
+                }.start();
 
-        //there is a bomb in this location
-        if(bombLocation[i][j]) {
-            tv.setText(MINE_ICON);
-            Intent intent = new Intent(this, GameOverActivity.class);
-            intent.putExtra("TIME", time);
-            startActivity(intent);
-            return;
-        } else {
-            if (tv.getCurrentTextColor() == Color.GRAY ) {
-                int bombCount = totalAdjacent(i, j);
-                if (bombCount > 0) {
-                    cell_tvs[i][j].setText(String.valueOf(bombCount));
-                }
-                if(bombCount == 0)
-                {
-                    initialDig(i,j);
-                }
-                tv.setTextColor(Color.GRAY);
-                 tv.setBackgroundColor(Color.LTGRAY);
+                //bfs dig
+                initialDig(i, j);
             }
+
+            //there is a bomb in this location
+            if (bombLocation[i][j]) {
+                tv.setText(MINE_ICON);
+                Intent intent = new Intent(this, GameOverActivity.class);
+                intent.putExtra("TIME", time);
+                startActivity(intent);
+                return;
+            } else {
+                if (tv.getCurrentTextColor() == Color.GRAY) {
+                    int bombCount = totalAdjacent(i, j);
+                    if (bombCount > 0) {
+                        cell_tvs[i][j].setText(String.valueOf(bombCount));
+                    }
+                    if (bombCount == 0) {
+                        initialDig(i, j);
+                    }
+                    tv.setTextColor(Color.GRAY);
+                    tv.setBackgroundColor(Color.LTGRAY);
+                    checkWinner();
+                    if(isWinner) {
+                        Intent intent = new Intent(this, GameWinnerActivity.class);
+                        intent.putExtra("TIME", time);
+                        startActivity(intent);
+                    }
+                }
+            }
+        } else {
+            //FLAG LOGIC
         }
+
+
     }
 }
