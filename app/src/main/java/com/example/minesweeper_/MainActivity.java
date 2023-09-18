@@ -13,6 +13,8 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
+
+import java.util.ArrayList;
 import java.util.Random;
 import java.util.Locale;
 import android.os.Handler;
@@ -34,7 +36,6 @@ public class MainActivity extends AppCompatActivity {
     private static final int ROW_COUNT = 12; //10
     private String MINE_ICON = "\uD83D\uDCA3";
     private String FLAG_ICON = "\uD83D\uDEA9";
-
     private String PICK_ICON = "\u26CF";
 
     // save the TextViews of all cells in an array, so later on,
@@ -46,6 +47,61 @@ public class MainActivity extends AppCompatActivity {
     private int dpToPixel(int dp) {
         float density = Resources.getSystem().getDisplayMetrics().density;
         return Math.round(dp * density);
+    }
+
+    //calculate the number that should be printed in a cell based on adjacent bomb locations
+    private int totalAdjacent(int i, int j)
+    {
+        int bombCount = 0;
+
+        for (int r = i - 1; r <= i + 1; r++) {
+            for (int c = j - 1; c <= j + 1; c++) {
+                // Skip if out of bounds or if it's the current cell
+                if (r < 0 || r >= ROW_COUNT || c < 0 || c >= COLUMN_COUNT || (r == 1 && c == j)) {
+                    continue;
+                }
+
+                if (bombLocation[r][c]) {
+                    bombCount++;
+                }
+            }
+        }
+
+        return bombCount;
+    }
+
+
+    //bfs implementation over here
+    private void initialDig(int r, int c)
+    {
+        ArrayList<int[]> cellsToProcess = new ArrayList<>();
+        cellsToProcess.add(new int[]{r, c});
+
+        while (!cellsToProcess.isEmpty()) {
+            //only if it is empty has no number or bomb, keep spreading till u hit a boundary or a number
+            int[] cell = cellsToProcess.remove(0); // Remove the first cell
+
+            int row = cell[0];
+            int col = cell[1];
+            //boundary check
+            if (row < 0 || row >= ROW_COUNT || col < 0 || col >= COLUMN_COUNT || bombLocation[row][col]) {
+                continue; // Skip this cell if it's out of bounds or contains a bomb
+            }
+            //check if the cell is visited
+            // Process the cell if it doesn't have a bomb
+            if (row >= 0 && row < ROW_COUNT && col >= 0 && col < COLUMN_COUNT && !bombLocation[row][col]) {
+                TextView tv = cell_tvs[row][col];
+                tv.setText(String.valueOf(row) + String.valueOf(col));
+                tv.setTextColor(Color.GRAY);
+                tv.setBackgroundColor(Color.LTGRAY);
+
+                // Add neighboring cells to be processed
+                cellsToProcess.add(new int[]{row - 1, col}); // Up
+                cellsToProcess.add(new int[]{row + 1, col}); // Down
+                cellsToProcess.add(new int[]{row, col - 1}); // Left
+                cellsToProcess.add(new int[]{row, col + 1}); // Right
+            }
+        }
     }
 
     @Override
@@ -126,14 +182,12 @@ public class MainActivity extends AppCompatActivity {
         }
         return new int[0];
     }
-
-
     public void onClickTV(View view){
         TextView tv = (TextView) view;
         int[] idx = findIndexOfCellTextView(tv);
         int i = idx[0];
         int j = idx[1];
-        tv.setText(String.valueOf(i)+String.valueOf(j));
+       // tv.setText(String.valueOf(i)+String.valueOf(j));
         isFirstClick+=1;
         if(isFirstClick == 1) {
             //timer logic
@@ -148,6 +202,9 @@ public class MainActivity extends AppCompatActivity {
                     //Not needed for this project, having it to implement abstract class
                 }
             }.start();
+
+            //bfs dig
+            //initialDig(i,j);
         }
 
         //there is a bomb in this location
@@ -157,9 +214,12 @@ public class MainActivity extends AppCompatActivity {
             intent.putExtra("TIME", time);
             startActivity(intent);
             return;
-
         } else {
             if (tv.getCurrentTextColor() == Color.GRAY ) {
+                int bombCount = totalAdjacent(i, j);
+                if (bombCount > 0) {
+                    cell_tvs[i][j].setText(String.valueOf(bombCount));
+                }
                 tv.setTextColor(Color.GRAY);
                  tv.setBackgroundColor(Color.LTGRAY);
             }
