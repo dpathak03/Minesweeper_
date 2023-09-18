@@ -15,6 +15,8 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.Queue;
 import java.util.Random;
 import java.util.Locale;
 import android.os.Handler;
@@ -57,16 +59,14 @@ public class MainActivity extends AppCompatActivity {
         for (int r = i - 1; r <= i + 1; r++) {
             for (int c = j - 1; c <= j + 1; c++) {
                 // Skip if out of bounds or if it's the current cell
-                if (r < 0 || r >= ROW_COUNT || c < 0 || c >= COLUMN_COUNT || (r == 1 && c == j)) {
+                if (r < 0 || r >= ROW_COUNT || c < 0 || c >= COLUMN_COUNT ) {
                     continue;
                 }
-
                 if (bombLocation[r][c]) {
                     bombCount++;
                 }
             }
         }
-
         return bombCount;
     }
 
@@ -74,33 +74,39 @@ public class MainActivity extends AppCompatActivity {
     //bfs implementation over here
     private void initialDig(int r, int c)
     {
-        ArrayList<int[]> cellsToProcess = new ArrayList<>();
+        Queue<int[]> cellsToProcess = new LinkedList<>();
+        boolean[][] visited = new boolean[ROW_COUNT][COLUMN_COUNT];
         cellsToProcess.add(new int[]{r, c});
 
         while (!cellsToProcess.isEmpty()) {
-            //only if it is empty has no number or bomb, keep spreading till u hit a boundary or a number
-            int[] cell = cellsToProcess.remove(0); // Remove the first cell
+            int[] cell = cellsToProcess.poll(); // Remove the first cell
 
             int row = cell[0];
             int col = cell[1];
             //boundary check
-            if (row < 0 || row >= ROW_COUNT || col < 0 || col >= COLUMN_COUNT || bombLocation[row][col]) {
-                continue; // Skip this cell if it's out of bounds or contains a bomb
+            if (row < 0 || row >= ROW_COUNT || col < 0 || col >= COLUMN_COUNT || visited[row][col] || bombLocation[row][col]) {
+                continue; // Skip this cell if it's out of bounds, visited, or contains a bomb
             }
-            //check if the cell is visited
-            // Process the cell if it doesn't have a bomb
-            if (row >= 0 && row < ROW_COUNT && col >= 0 && col < COLUMN_COUNT && !bombLocation[row][col]) {
-                TextView tv = cell_tvs[row][col];
-                tv.setText(String.valueOf(row) + String.valueOf(col));
-                tv.setTextColor(Color.GRAY);
-                tv.setBackgroundColor(Color.LTGRAY);
 
-                // Add neighboring cells to be processed
-                cellsToProcess.add(new int[]{row - 1, col}); // Up
-                cellsToProcess.add(new int[]{row + 1, col}); // Down
-                cellsToProcess.add(new int[]{row, col - 1}); // Left
-                cellsToProcess.add(new int[]{row, col + 1}); // Right
+            visited[row][col] = true; // Mark cell as visited
+
+            // Process the cell if it doesn't have a bomb
+            TextView tv = cell_tvs[row][col];
+            //tv.setText(String.valueOf(row) + String.valueOf(col));
+            tv.setTextColor(Color.GRAY);
+            tv.setBackgroundColor(Color.LTGRAY);
+
+            int bombCount = totalAdjacent(row, col);
+            if (bombCount > 0) {
+                cell_tvs[row][col].setText(String.valueOf(bombCount));
+                continue;
             }
+
+            // Add neighboring cells to be processed
+            cellsToProcess.add(new int[]{row - 1, col}); // Up
+            cellsToProcess.add(new int[]{row + 1, col}); // Down
+            cellsToProcess.add(new int[]{row, col - 1}); // Left
+            cellsToProcess.add(new int[]{row, col + 1}); // Right
         }
     }
 
@@ -187,7 +193,7 @@ public class MainActivity extends AppCompatActivity {
         int[] idx = findIndexOfCellTextView(tv);
         int i = idx[0];
         int j = idx[1];
-       // tv.setText(String.valueOf(i)+String.valueOf(j));
+
         isFirstClick+=1;
         if(isFirstClick == 1) {
             //timer logic
@@ -204,7 +210,7 @@ public class MainActivity extends AppCompatActivity {
             }.start();
 
             //bfs dig
-            //initialDig(i,j);
+            initialDig(i,j);
         }
 
         //there is a bomb in this location
@@ -219,6 +225,10 @@ public class MainActivity extends AppCompatActivity {
                 int bombCount = totalAdjacent(i, j);
                 if (bombCount > 0) {
                     cell_tvs[i][j].setText(String.valueOf(bombCount));
+                }
+                if(bombCount == 0)
+                {
+                    initialDig(i,j);
                 }
                 tv.setTextColor(Color.GRAY);
                  tv.setBackgroundColor(Color.LTGRAY);
