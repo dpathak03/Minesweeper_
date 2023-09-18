@@ -6,14 +6,76 @@
     android:layout_height="match_parent"
     tools:context=".MainActivity">
 
+
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_marginTop="16dp">
+        <!--flag icon-->
+        <TextView
+            android:id="@+id/flagCounterIcon"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/flag"
+            android:textSize="36sp"
+            android:textAlignment="center"/>
+        <!--flag counter-->
+        <TextView
+            android:id="@+id/flagCounter"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="0"
+            android:textSize="30sp"
+            android:textAlignment="center"
+            android:layout_marginStart="16dp"/>
+
+        <View
+            android:layout_width="32dp"
+            android:layout_height="1dp" />
+
+        <View
+            android:layout_width="32dp"
+            android:layout_height="1dp" />
+
+        <View
+            android:layout_width="32dp"
+            android:layout_height="1dp" />
+
+        <!--timer icon-->
+        <TextView
+            android:id="@+id/timerIcon"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/clock"
+            android:textSize="36sp"
+            android:textAlignment="center"
+            android:layout_marginStart="16dp"/>
+        <!--timer incrementation-->
+        <TextView
+            android:id="@+id/timer"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="0:00"
+            android:textSize="36sp"
+            android:textAlignment="center"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintStart_toEndOf="@id/timerIcon"
+            android:layout_marginStart="16dp"/>
+    </LinearLayout>
+
+
     <androidx.gridlayout.widget.GridLayout
         android:id="@+id/gridLayout01"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        android:layout_marginStart="10dp"
-        android:layout_marginTop="10dp"
-        android:layout_marginEnd="70dp"
-        android:layout_marginBottom="70dp"
+        android:layout_marginStart="60dp"
+        android:layout_marginTop="150dp"
+        android:layout_marginEnd="60dp"
+        android:layout_marginBottom="19dp"
         android:layout_gravity="center"
         app:rowCount="12"
         app:columnCount="10"
@@ -24,7 +86,10 @@
         >
 
 
-<!--        <TextView-->
+
+
+
+        <!--        <TextView-->
 <!--            android:id="@+id/textView00"-->
 <!--            android:layout_width="wrap_content"-->
 <!--            android:layout_height="wrap_content"-->
