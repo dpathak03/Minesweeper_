@@ -6,15 +6,22 @@ import androidx.gridlayout.widget.GridLayout;
 import android.content.res.Resources;
 import android.graphics.Color;
 import android.os.Bundle;
+import android.os.CountDownTimer;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.TextView;
 import java.util.Random;
-
-import java.util.ArrayList;
+import java.util.Locale;
+import android.os.Handler;
+import android.widget.TextView;
 
 public class MainActivity extends AppCompatActivity {
+    private Handler handler = new Handler();
+    private int time = 0;
+    int isFirstClick = 0;
+    private TextView timer;
+
 
     private static final int COLUMN_COUNT = 10; //12
     private static final int ROW_COUNT = 12; //10
@@ -36,7 +43,8 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         cell_tvs = new TextView[ROW_COUNT][COLUMN_COUNT];
-
+        timer = findViewById(R.id.timer);
+        timer.setText("0");
 
 
         // Method (2): add four dynamically created cells
@@ -105,6 +113,23 @@ public class MainActivity extends AppCompatActivity {
         int i = idx[0];
         int j = idx[1];
         tv.setText(String.valueOf(i)+String.valueOf(j));
+        isFirstClick+=1;
+        if(isFirstClick == 1) {
+            //timer = findViewById(R.id.timer);
+            //timer logic
+            new CountDownTimer(Long.MAX_VALUE, 1000) {
+                @Override
+                public void onTick(long millisUntilFinished) {
+                    time++;
+                    timer.setText(String.format(Locale.getDefault(), "%d", time));
+                }
+                @Override
+                public void onFinish() {
+                    // Handle timer finish if needed
+                }
+            }.start();
+        }
+
         if (tv.getCurrentTextColor() == Color.GRAY ) {
             if (cell_tvs[i][j].getText().equals(MINE_ICON)) {
                 // If the clicked cell contains a bomb, reveal it
