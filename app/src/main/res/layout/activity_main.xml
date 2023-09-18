@@ -5,8 +5,6 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context=".MainActivity">
-
-
     <LinearLayout
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -89,6 +87,7 @@
 
 
 
+
         <!--        <TextView-->
 <!--            android:id="@+id/textView00"-->
 <!--            android:layout_width="wrap_content"-->
@@ -154,5 +153,18 @@
 <!--            app:layout_row="1" />-->
 
     </androidx.gridlayout.widget.GridLayout>
+
+    <TextView
+        android:id="@+id/pick_icon"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/pick"
+        android:textSize="36sp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_marginBottom="16dp" />
+
+
 
 </androidx.constraintlayout.widget.ConstraintLayout>

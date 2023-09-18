@@ -3,6 +3,7 @@ package com.example.minesweeper_;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.gridlayout.widget.GridLayout;
 
+import android.content.Intent;
 import android.content.res.Resources;
 import android.graphics.Color;
 import android.os.Bundle;
@@ -10,6 +11,7 @@ import android.os.CountDownTimer;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.widget.ImageView;
 import android.widget.TextView;
 import java.util.Random;
 import java.util.Locale;
@@ -21,15 +23,24 @@ public class MainActivity extends AppCompatActivity {
     private int time = 0;
     int isFirstClick = 0;
     private TextView timer;
+    boolean isDigging = true;
+
+    private boolean[][] bombLocation;
+
+    TextView diggingTool;
 
 
     private static final int COLUMN_COUNT = 10; //12
     private static final int ROW_COUNT = 12; //10
     private String MINE_ICON = "\uD83D\uDCA3";
+    private String FLAG_ICON = "\uD83D\uDEA9";
+
+    private String PICK_ICON = "\u26CF";
 
     // save the TextViews of all cells in an array, so later on,
     // when a TextView is clicked, we know which cell it is
     private TextView[][] cell_tvs;
+    private int initialFlagCounter = 4;
 
 
     private int dpToPixel(int dp) {
@@ -46,6 +57,22 @@ public class MainActivity extends AppCompatActivity {
         timer = findViewById(R.id.timer);
         timer.setText("0");
 
+        if(isDigging) {
+            diggingTool = findViewById(R.id.pick_icon);
+        }
+        diggingTool.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (isDigging) {
+                    diggingTool.setText(FLAG_ICON);
+                    isDigging = false;
+                } else {
+                    diggingTool.setText(PICK_ICON);
+                    isDigging = true;
+                }
+            }
+        });
+
 
         // Method (2): add four dynamically created cells
         GridLayout grid = (GridLayout) findViewById(R.id.gridLayout01);
@@ -57,24 +84,18 @@ public class MainActivity extends AppCompatActivity {
                 tv.setHeight(dpToPixel(25));
                 tv.setWidth(dpToPixel(25));
                 tv.setTextSize(14);
+                TextView flagCounter = findViewById(R.id.flagCounter);
+                flagCounter.setText("" + initialFlagCounter);
                 tv.setTextAlignment(TextView.TEXT_ALIGNMENT_CENTER);
                 tv.setTextColor(Color.GRAY);
-                tv.setBackgroundColor(Color.GRAY);
+                tv.setBackgroundColor(Color.parseColor("lime"));
                 tv.setOnClickListener(this::onClickTV);
                 GridLayout.LayoutParams lp = new GridLayout.LayoutParams();
                 lp.setMargins(dpToPixel(2), dpToPixel(2), dpToPixel(2), dpToPixel(2));
-
                 lp.rowSpec = GridLayout.spec(i);
                 lp.columnSpec = GridLayout.spec(j);
-
                 grid.addView(tv, lp);
-
                 cell_tvs[i][j] = tv;
-
-                cell_tvs[i][j] = tv;
-
-
-
             }
         }
         setMines();
@@ -82,19 +103,19 @@ public class MainActivity extends AppCompatActivity {
 
     private void setMines() {
         Random rand = new Random();
+        bombLocation = new boolean[ROW_COUNT][COLUMN_COUNT];
+
         int numMine = 0;
         while (numMine < 4) {
             int randRow = rand.nextInt(ROW_COUNT);
             int randCol = rand.nextInt(COLUMN_COUNT);
 
-            if (!cell_tvs[randRow][randCol].getText().equals(MINE_ICON)) {
-                cell_tvs[randRow][randCol].setText(MINE_ICON);
-                cell_tvs[randRow][randCol].setTextColor(Color.GRAY);
+            if (!bombLocation[randRow][randCol]) {
+                bombLocation[randRow][randCol] = true;
                 numMine++;
             }
         }
     }
-
     private int[] findIndexOfCellTextView(TextView tv) {
         for (int n = 0; n < ROW_COUNT; n++) {
             for (int m = 0; m < COLUMN_COUNT; m++) {
@@ -115,7 +136,6 @@ public class MainActivity extends AppCompatActivity {
         tv.setText(String.valueOf(i)+String.valueOf(j));
         isFirstClick+=1;
         if(isFirstClick == 1) {
-            //timer = findViewById(R.id.timer);
             //timer logic
             new CountDownTimer(Long.MAX_VALUE, 1000) {
                 @Override
@@ -125,25 +145,24 @@ public class MainActivity extends AppCompatActivity {
                 }
                 @Override
                 public void onFinish() {
-                    // Handle timer finish if needed
+                    //Not needed for this project, having it to implement abstract class
                 }
             }.start();
         }
 
-        if (tv.getCurrentTextColor() == Color.GRAY ) {
-            if (cell_tvs[i][j].getText().equals(MINE_ICON)) {
-                // If the clicked cell contains a bomb, reveal it
-                tv.setTextColor(Color.RED); // Set color to indicate bomb
-                tv.setText(MINE_ICON);
-            } else {
-                // Handle non-bomb cell click
-                // (you can implement this part as needed)
+        //there is a bomb in this location
+        if(bombLocation[i][j]) {
+            tv.setText(MINE_ICON);
+            Intent intent = new Intent(this, GameOverActivity.class);
+            intent.putExtra("TIME", time);
+            startActivity(intent);
+            return;
+
+        } else {
+            if (tv.getCurrentTextColor() == Color.GRAY ) {
+                tv.setTextColor(Color.GRAY);
+                 tv.setBackgroundColor(Color.LTGRAY);
             }
-            tv.setTextColor(Color.GREEN);
-            tv.setBackgroundColor(Color.parseColor("lime"));
-        }else {
-            tv.setTextColor(Color.GRAY);
-            tv.setBackgroundColor(Color.LTGRAY);
         }
     }
 }
