@@ -36,6 +36,10 @@ public class MainActivity extends AppCompatActivity {
 
     TextView diggingTool;
 
+    TextView flagCounter;
+
+    //2d array of the flags
+
 
     private static final int COLUMN_COUNT = 10; //12
     private static final int ROW_COUNT = 12; //10
@@ -49,6 +53,8 @@ public class MainActivity extends AppCompatActivity {
     private int initialFlagCounter = 4;
 
     private boolean bombClicked = false;
+
+    private String[][] originalString = new String[ROW_COUNT][COLUMN_COUNT];
 
 
     private int dpToPixel(int dp) {
@@ -126,7 +132,10 @@ public class MainActivity extends AppCompatActivity {
 
         if(isDigging) {
             diggingTool = findViewById(R.id.pick_icon);
+            flagCounter = findViewById(R.id.flagCounter);
         }
+
+
         diggingTool.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -164,6 +173,11 @@ public class MainActivity extends AppCompatActivity {
             }
         }
         setMines();
+        for (int i = 0; i < ROW_COUNT; i++) {
+            for (int j = 0; j < COLUMN_COUNT; j++) {
+                originalString[i][j] = cell_tvs[i][j].getText().toString();
+            }
+        }
     }
     //check if there is a winner
     private void checkWinner()
@@ -218,6 +232,7 @@ public class MainActivity extends AppCompatActivity {
         isFirstClick += 1;
 
         if (isDigging) {
+            //check if the coordinate
             if (isFirstClick == 1) {
                 //timer logic
                 new CountDownTimer(Long.MAX_VALUE, 1000) {
@@ -246,6 +261,8 @@ public class MainActivity extends AppCompatActivity {
             //there is a bomb in this location
             if (bombLocation[i][j]) {
                 bombClicked = true;
+
+
                 //iterate through and set string in all of the bombs
                 for (int m = 0; m < ROW_COUNT; m++) {
                     for (int n = 0; n < COLUMN_COUNT; n++) {
@@ -276,8 +293,25 @@ public class MainActivity extends AppCompatActivity {
             }
         } else {
             //FLAG LOGIC
+            //add and remove a flag
+            if (cell_tvs[i][j].getText().equals(FLAG_ICON)) {
+                // The cell already has a flag, remove it
+                cell_tvs[i][j].setText(originalString[i][j]); // Restore original text
+                initialFlagCounter++; // Increment flag counter
+            } else {
+                // The cell does not have a flag, add one
+                if(((ColorDrawable)tv.getBackground()).getColor() == Color.parseColor("lime")) {
+                    cell_tvs[i][j].setText(FLAG_ICON); // Set flag icon
+                    initialFlagCounter--; // Decrement flag counter
+                }
+            }
+
+            // Update the flag counter TextView
+            flagCounter.setText(String.valueOf(initialFlagCounter));
+        }
+
         }
 
 
     }
-}
+
