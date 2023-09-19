@@ -34,7 +34,10 @@ public class MainActivity extends AppCompatActivity {
 
     private boolean[][] bombLocation;
 
+    private CountDownTimer countdownTimer;
+
     TextView diggingTool;
+
 
     TextView flagCounter;
 
@@ -53,6 +56,8 @@ public class MainActivity extends AppCompatActivity {
     private int initialFlagCounter = 4;
 
     private boolean bombClicked = false;
+
+    private boolean winnerFound = false;
 
     private String[][] originalString = new String[ROW_COUNT][COLUMN_COUNT];
 
@@ -230,27 +235,27 @@ public class MainActivity extends AppCompatActivity {
         int i = idx[0];
         int j = idx[1];
         isFirstClick += 1;
+        if (isFirstClick == 1) {
+            //timer logic
+            countdownTimer = new CountDownTimer(Long.MAX_VALUE, 1000) {
+                @Override
+                public void onTick(long millisUntilFinished) {
+                    time++;
+                    timer.setText(String.format(Locale.getDefault(), "%d", time));
+                }
 
+                @Override
+                public void onFinish() {
+                    //Not needed for this project, having it to implement abstract class
+                }
+            }.start();
+        }
         if (isDigging) {
-            //check if the coordinate
             if (isFirstClick == 1) {
-                //timer logic
-                new CountDownTimer(Long.MAX_VALUE, 1000) {
-                    @Override
-                    public void onTick(long millisUntilFinished) {
-                        time++;
-                        timer.setText(String.format(Locale.getDefault(), "%d", time));
-                    }
-
-                    @Override
-                    public void onFinish() {
-                        //Not needed for this project, having it to implement abstract class
-                    }
-                }.start();
-
                 //bfs dig
                 initialDig(i, j);
             }
+
 
             if(bombClicked) {
                 Intent intent = new Intent(this, GameOverActivity.class);
@@ -259,10 +264,9 @@ public class MainActivity extends AppCompatActivity {
             }
 
             //there is a bomb in this location
-            if (bombLocation[i][j]) {
+            if (bombLocation[i][j] && !winnerFound) {
                 bombClicked = true;
-
-
+                countdownTimer.cancel();
                 //iterate through and set string in all of the bombs
                 for (int m = 0; m < ROW_COUNT; m++) {
                     for (int n = 0; n < COLUMN_COUNT; n++) {
@@ -283,11 +287,16 @@ public class MainActivity extends AppCompatActivity {
                     }
                     tv.setTextColor(Color.GRAY);
                     tv.setBackgroundColor(Color.LTGRAY);
-                    checkWinner();
-                    if(isWinner) {
+                    //winner!
+                    if(winnerFound) {
                         Intent intent = new Intent(this, GameWinnerActivity.class);
                         intent.putExtra("TIME", time);
                         startActivity(intent);
+                    }
+                    checkWinner();
+                    if(isWinner) {
+                        winnerFound = true;
+                        countdownTimer.cancel();
                     }
                 }
             }
