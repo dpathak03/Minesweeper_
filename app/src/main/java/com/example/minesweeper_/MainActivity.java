@@ -48,6 +48,8 @@ public class MainActivity extends AppCompatActivity {
     private TextView[][] cell_tvs;
     private int initialFlagCounter = 4;
 
+    private boolean bombClicked = false;
+
 
     private int dpToPixel(int dp) {
         float density = Resources.getSystem().getDisplayMetrics().density;
@@ -137,8 +139,6 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         });
-
-
         // Method (2): add four dynamically created cells
         GridLayout grid = (GridLayout) findViewById(R.id.gridLayout01);
 
@@ -181,12 +181,10 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         }
-
         if (greenCellCount == 4) {
             isWinner = true;
         }
     }
-
     private void setMines() {
         Random rand = new Random();
         bombLocation = new boolean[ROW_COUNT][COLUMN_COUNT];
@@ -239,13 +237,24 @@ public class MainActivity extends AppCompatActivity {
                 initialDig(i, j);
             }
 
-            //there is a bomb in this location
-            if (bombLocation[i][j]) {
-                tv.setText(MINE_ICON);
+            if(bombClicked) {
                 Intent intent = new Intent(this, GameOverActivity.class);
                 intent.putExtra("TIME", time);
                 startActivity(intent);
-                return;
+            }
+
+            //there is a bomb in this location
+            if (bombLocation[i][j]) {
+                bombClicked = true;
+                //iterate through and set string in all of the bombs
+                for (int m = 0; m < ROW_COUNT; m++) {
+                    for (int n = 0; n < COLUMN_COUNT; n++) {
+                        if (bombLocation[m][n]) {
+                            cell_tvs[m][n].setText(MINE_ICON);
+                            cell_tvs[m][n].setBackgroundColor(Color.parseColor("red"));
+                        }
+                    }
+                }
             } else {
                 if (tv.getCurrentTextColor() == Color.GRAY) {
                     int bombCount = totalAdjacent(i, j);
