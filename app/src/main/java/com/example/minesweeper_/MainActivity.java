@@ -1,27 +1,19 @@
 package com.example.minesweeper_;
-
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.gridlayout.widget.GridLayout;
-
 import android.content.Intent;
 import android.content.res.Resources;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
 import android.os.CountDownTimer;
-import android.util.Log;
-import android.view.LayoutInflater;
 import android.view.View;
-import android.widget.ImageView;
 import android.widget.TextView;
-
-import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.Queue;
 import java.util.Random;
 import java.util.Locale;
 import android.os.Handler;
-import android.widget.TextView;
 
 public class MainActivity extends AppCompatActivity {
     private Handler handler = new Handler();
@@ -34,34 +26,22 @@ public class MainActivity extends AppCompatActivity {
 
     private boolean[][] bombLocation;
 
-    private CountDownTimer countdownTimer;
+    private CountDownTimer clock;
 
-    TextView diggingTool;
+    private boolean[][] visited;
 
-
+    TextView digger;
     TextView flagCounter;
-
-    //2d array of the flags
-
-
     private static final int COLUMN_COUNT = 10; //12
     private static final int ROW_COUNT = 12; //10
     private String MINE_ICON = "\uD83D\uDCA3";
     private String FLAG_ICON = "\uD83D\uDEA9";
     private String PICK_ICON = "\u26CF";
-
-    // save the TextViews of all cells in an array, so later on,
-    // when a TextView is clicked, we know which cell it is
     private TextView[][] cell_tvs;
     private int initialFlagCounter = 4;
-
     private boolean bombClicked = false;
-
     private boolean winnerFound = false;
-
     private String[][] originalString = new String[ROW_COUNT][COLUMN_COUNT];
-
-
     private int dpToPixel(int dp) {
         float density = Resources.getSystem().getDisplayMetrics().density;
         return Math.round(dp * density);
@@ -70,95 +50,81 @@ public class MainActivity extends AppCompatActivity {
     //calculate the number that should be printed in a cell based on adjacent bomb locations
     private int totalAdjacent(int i, int j)
     {
-        int bombCount = 0;
-
+        int counter = 0;
         for (int r = i - 1; r <= i + 1; r++) {
             for (int c = j - 1; c <= j + 1; c++) {
-                // Skip if out of bounds or if it's the current cell
-                if (r < 0 || r >= ROW_COUNT || c < 0 || c >= COLUMN_COUNT ) {
+                //boundary check
+                if (r < 0 || c < 0 || r >= ROW_COUNT || c >= COLUMN_COUNT) {
                     continue;
                 }
                 if (bombLocation[r][c]) {
-                    bombCount++;
+                    counter++;
                 }
             }
         }
-        return bombCount;
+        //return the number of bombs in the adjacent cells
+        return counter;
     }
 
 
     //bfs implementation over here
     private void initialDig(int r, int c)
     {
-        Queue<int[]> cellsToProcess = new LinkedList<>();
-        boolean[][] visited = new boolean[ROW_COUNT][COLUMN_COUNT];
-        cellsToProcess.add(new int[]{r, c});
-
-        while (!cellsToProcess.isEmpty()) {
-            int[] cell = cellsToProcess.poll(); // Remove the first cell
-
+        Queue<int[]> cellsNeighbors = new LinkedList<>();
+        cellsNeighbors.add(new int[]{r, c});
+        visited = new boolean[ROW_COUNT][COLUMN_COUNT];
+        while (!cellsNeighbors.isEmpty()) {
+            int[] cell = cellsNeighbors.poll();
             int row = cell[0];
             int col = cell[1];
-            //boundary check
-            if (row < 0 || row >= ROW_COUNT || col < 0 || col >= COLUMN_COUNT || visited[row][col] || bombLocation[row][col]) {
-                continue; // Skip this cell if it's out of bounds, visited, or contains a bomb
+            if (row < 0 || row >= ROW_COUNT || col < 0 || col >= COLUMN_COUNT) {
+                continue;
             }
-
-            visited[row][col] = true; // Mark cell as visited
-
-            // Process the cell if it doesn't have a bomb
+            if (visited[row][col] || bombLocation[row][col]) {
+                continue;
+            }
+            visited[row][col] = true;
             TextView tv = cell_tvs[row][col];
-            //tv.setText(String.valueOf(row) + String.valueOf(col));
             tv.setTextColor(Color.GRAY);
             tv.setBackgroundColor(Color.LTGRAY);
-
             int bombCount = totalAdjacent(row, col);
             if (bombCount > 0) {
                 cell_tvs[row][col].setText(String.valueOf(bombCount));
                 continue;
             }
-
-            // Add neighboring cells to be processed
-            cellsToProcess.add(new int[]{row - 1, col}); // Up
-            cellsToProcess.add(new int[]{row + 1, col}); // Down
-            cellsToProcess.add(new int[]{row, col - 1}); // Left
-            cellsToProcess.add(new int[]{row, col + 1}); // Right
+            cellsNeighbors.add(new int[]{row - 1, col});
+            cellsNeighbors.add(new int[]{row + 1, col});
+            cellsNeighbors.add(new int[]{row, col - 1});
+            cellsNeighbors.add(new int[]{row, col + 1});
         }
     }
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
         cell_tvs = new TextView[ROW_COUNT][COLUMN_COUNT];
         timer = findViewById(R.id.timer);
         timer.setText("0");
-
         if(isDigging) {
-            diggingTool = findViewById(R.id.pick_icon);
+            digger = findViewById(R.id.pick_icon);
             flagCounter = findViewById(R.id.flagCounter);
         }
-
-
-        diggingTool.setOnClickListener(new View.OnClickListener() {
+        digger.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 if (isDigging) {
-                    diggingTool.setText(FLAG_ICON);
+                    digger.setText(FLAG_ICON);
                     isDigging = false;
                 } else {
-                    diggingTool.setText(PICK_ICON);
+                    digger.setText(PICK_ICON);
                     isDigging = true;
                 }
             }
         });
         // Method (2): add four dynamically created cells
         GridLayout grid = (GridLayout) findViewById(R.id.gridLayout01);
-
-        for (int i = 0; i < ROW_COUNT; i++) { // Rows loop
-            for (int j = 0; j < COLUMN_COUNT; j++) { // Columns loop
-
+        for (int i = 0; i < ROW_COUNT; i++) {
+            for (int j = 0; j < COLUMN_COUNT; j++) {
                 TextView tv = new TextView(this);
                 tv.setHeight(dpToPixel(25));
                 tv.setWidth(dpToPixel(25));
@@ -188,12 +154,10 @@ public class MainActivity extends AppCompatActivity {
     private void checkWinner()
     {
         int greenCellCount = 0;
-
         // Iterate through all cells
         for (int i = 0; i < ROW_COUNT; i++) {
             for (int j = 0; j < COLUMN_COUNT; j++) {
                 TextView tv = cell_tvs[i][j];
-
                 // Check if the background color is green
                 if (((ColorDrawable)tv.getBackground()).getColor() == Color.parseColor("lime")) {
                     greenCellCount++;
@@ -207,14 +171,12 @@ public class MainActivity extends AppCompatActivity {
     private void setMines() {
         Random rand = new Random();
         bombLocation = new boolean[ROW_COUNT][COLUMN_COUNT];
-
         int numMine = 0;
         while (numMine < 4) {
-            int randRow = rand.nextInt(ROW_COUNT);
-            int randCol = rand.nextInt(COLUMN_COUNT);
-
-            if (!bombLocation[randRow][randCol]) {
-                bombLocation[randRow][randCol] = true;
+            int rc = rand.nextInt(COLUMN_COUNT);
+            int rr = rand.nextInt(ROW_COUNT);
+            if (!bombLocation[rr][rc]) {
+                bombLocation[rr][rc] = true;
                 numMine++;
             }
         }
@@ -237,16 +199,14 @@ public class MainActivity extends AppCompatActivity {
         isFirstClick += 1;
         if (isFirstClick == 1) {
             //timer logic
-            countdownTimer = new CountDownTimer(Long.MAX_VALUE, 1000) {
+            clock = new CountDownTimer(Long.MAX_VALUE, 1000) {
                 @Override
                 public void onTick(long millisUntilFinished) {
                     time++;
                     timer.setText(String.format(Locale.getDefault(), "%d", time));
                 }
-
                 @Override
                 public void onFinish() {
-                    //Not needed for this project, having it to implement abstract class
                 }
             }.start();
         }
@@ -255,18 +215,15 @@ public class MainActivity extends AppCompatActivity {
                 //bfs dig
                 initialDig(i, j);
             }
-
-
             if(bombClicked) {
                 Intent intent = new Intent(this, GameOverActivity.class);
                 intent.putExtra("TIME", time);
                 startActivity(intent);
             }
-
             //there is a bomb in this location
             if (bombLocation[i][j] && !winnerFound) {
                 bombClicked = true;
-                countdownTimer.cancel();
+                clock.cancel();
                 //iterate through and set string in all of the bombs
                 for (int m = 0; m < ROW_COUNT; m++) {
                     for (int n = 0; n < COLUMN_COUNT; n++) {
@@ -296,26 +253,21 @@ public class MainActivity extends AppCompatActivity {
                     checkWinner();
                     if(isWinner) {
                         winnerFound = true;
-                        countdownTimer.cancel();
+                        clock.cancel();
                     }
                 }
             }
         } else {
             //FLAG LOGIC
-            //add and remove a flag
             if (cell_tvs[i][j].getText().equals(FLAG_ICON)) {
-                // The cell already has a flag, remove it
-                cell_tvs[i][j].setText(originalString[i][j]); // Restore original text
-                initialFlagCounter++; // Increment flag counter
+                cell_tvs[i][j].setText(originalString[i][j]);
+                initialFlagCounter++;
             } else {
-                // The cell does not have a flag, add one
                 if(((ColorDrawable)tv.getBackground()).getColor() == Color.parseColor("lime")) {
-                    cell_tvs[i][j].setText(FLAG_ICON); // Set flag icon
-                    initialFlagCounter--; // Decrement flag counter
+                    cell_tvs[i][j].setText(FLAG_ICON);
+                    initialFlagCounter--;
                 }
             }
-
-            // Update the flag counter TextView
             flagCounter.setText(String.valueOf(initialFlagCounter));
         }
 
